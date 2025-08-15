@@ -1,32 +1,24 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { cliOptions, type CliArgs } from "./cli/options";
+import logger, { configureLogger } from "./logger/logger";
+import { generateSdk } from "./generator/generator";
 
-// Parse the command line arguments
-const args = yargs(hideBin(process.argv))
-  .option("verbose", {
-    alias: "v",
-    type: "boolean",
-    description: "Show verbose output",
-  })
-  .option("spec", {
-    alias: "s",
-    type: "string",
-    description: "Path to the OpenAPI specification file",
-    demandOption: true,
-  })
-  .option("output", {
-    alias: "o",
-    type: "string",
-    description: "Path to the output directory for the generated SDK",
-    demandOption: true,
-  })
-  .option("language", {
-    alias: "l",
-    type: "string",
-    description: "Language of the generated SDK",
-    demandOption: true,
-    choices: ["typescript", ".NET", "go"],
-  })
-  .parseSync();
+async function main() {
+  // Parse the command line arguments
+  const args = yargs(hideBin(process.argv)).options(cliOptions).parseSync() as CliArgs;
 
-console.log(args);
+  // set the log level
+  configureLogger(args);
+
+  logger.info("Starting SDK Compose tool, built with ❤️ by the team at https://github.com/Alfred-Onuada/sdk-compose");
+
+  await generateSdk(args);
+
+  logger.info(`SDK generated successfully at ${args.output}, pleasure serving you!`);
+}
+
+main().catch((err) => {
+  logger.error(err);
+  process.exit(1);
+});
